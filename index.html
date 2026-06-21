@@ -336,6 +336,84 @@
   }
   .secure-row span{display:flex; align-items:center; gap:6px;}
 
+  /* ===== COUNTDOWN ===== */
+  .countdown-wrap{margin-bottom:34px;}
+  .countdown-label{
+    font-size:13px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    color:#C9BBAB;
+    margin-bottom:12px;
+    font-weight:600;
+  }
+  .countdown-timer{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+  }
+  .cd-unit{
+    background:rgba(232,178,123,.08);
+    border:1px solid rgba(232,178,123,.3);
+    border-radius:6px;
+    padding:10px 14px;
+    min-width:62px;
+    text-align:center;
+  }
+  .cd-unit span{
+    display:block;
+    font-family:'Playfair Display',serif;
+    font-size:26px;
+    font-weight:700;
+    color:var(--amber-light);
+    line-height:1;
+  }
+  .cd-unit label{
+    display:block;
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:#A99880;
+    margin-top:4px;
+  }
+  .cd-sep{
+    display:flex;
+    align-items:center;
+    font-family:'Playfair Display',serif;
+    font-size:22px;
+    color:var(--amber-light);
+    opacity:.6;
+  }
+
+  /* ===== STICKY MOBILE CTA ===== */
+  body.sticky-active{padding-bottom:76px;}
+  .sticky-cta{
+    position:fixed;
+    left:0; right:0; bottom:0;
+    background:var(--ink);
+    border-top:1px solid rgba(232,178,123,.3);
+    padding:12px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    z-index:999;
+    transform:translateY(110%);
+    transition:transform .3s ease;
+    box-shadow:0 -12px 30px -10px rgba(0,0,0,.5);
+  }
+  .sticky-cta.visible{transform:translateY(0);}
+  .sticky-cta .s-price{font-family:'DM Sans',sans-serif; color:var(--cream); flex-shrink:0;}
+  .sticky-cta .s-price b{
+    display:block;
+    font-family:'Playfair Display',serif;
+    font-size:19px;
+    color:var(--amber-light);
+    font-weight:700;
+    line-height:1.1;
+  }
+  .sticky-cta .s-price small{font-size:11px; color:#A99880;}
+  .sticky-cta .btn{padding:11px 20px; font-size:14px; white-space:nowrap; box-shadow:none;}
+
   /* ===== GUARANTEE ===== */
   .guarantee{
     background:var(--moss);
@@ -640,10 +718,22 @@
     <span class="eyebrow on-dark">Diagnóstico SOFIA</span>
     <h2>Decidir o próximo passo no feeling pode te custar caro.</h2>
     <p class="sub">Tenha uma consultora de carreira inteligente trabalhando exclusivamente para você.</p>
+
+    <div class="countdown-wrap">
+      <div class="countdown-label">Oferta por tempo limitado termina em</div>
+      <div class="countdown-timer">
+        <div class="cd-unit"><span id="cd-hours">00</span><label>horas</label></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><span id="cd-minutes">00</span><label>min</label></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><span id="cd-seconds">00</span><label>seg</label></div>
+      </div>
+    </div>
+
     <div class="price-card">
       <div class="price-old">De R$ 97,00</div>
-      <div class="price-new">5x de R$ 8,64</div>
-      <div class="price-alt">ou R$ 39,00 à vista*</div>
+      <div class="price-new">R$ 39,00 à vista*</div>
+      <div class="price-alt">ou 5x de R$ 8,64</div>
       <a href="https://pay.hotmart.com/S104520601N" class="btn btn-block">Quero clareza agora!
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
@@ -701,6 +791,13 @@
   </div>
 </section>
 
+<div class="sticky-cta" id="stickyCta">
+  <div class="s-price"><b>R$ 39,00 à vista</b><small>ou 5x de R$ 8,64</small></div>
+  <a href="https://pay.hotmart.com/S104520601N" class="btn">Quero clareza agora
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8H13M13 8L9 4M13 8L9 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </a>
+</div>
+
 <footer>
   <div class="wrap">Copyright © Ubuntu RH Consultoria. Todos os direitos reservados.</div>
 </footer>
@@ -714,6 +811,60 @@
       if(!isOpen){ item.classList.add('open'); }
     });
   });
+
+  // Countdown timer with localStorage persistence (resets 24h after first visit)
+  (function(){
+    var KEY = 'sofia_offer_deadline';
+    var DURATION = 24 * 60 * 60 * 1000;
+    var now = Date.now();
+    var deadline = parseInt(localStorage.getItem(KEY), 10);
+    if (!deadline || isNaN(deadline) || deadline < now) {
+      deadline = now + DURATION;
+      try { localStorage.setItem(KEY, deadline); } catch(e) {}
+    }
+    function pad(n){ return String(n).padStart(2, '0'); }
+    function tick(){
+      var diff = deadline - Date.now();
+      if (diff < 0) diff = 0;
+      var h = Math.floor(diff / 3600000);
+      var m = Math.floor((diff % 3600000) / 60000);
+      var s = Math.floor((diff % 60000) / 1000);
+      var eh = document.getElementById('cd-hours');
+      var em = document.getElementById('cd-minutes');
+      var es = document.getElementById('cd-seconds');
+      if (eh) eh.textContent = pad(h);
+      if (em) em.textContent = pad(m);
+      if (es) es.textContent = pad(s);
+    }
+    tick();
+    setInterval(tick, 1000);
+  })();
+
+  // Sticky mobile CTA: show after hero, hide while offer section is in view
+  (function(){
+    var bar = document.getElementById('stickyCta');
+    var hero = document.querySelector('.hero');
+    var offer = document.getElementById('oferta');
+    if (!bar || !hero || !offer) return;
+    var pastHero = false;
+    var inOffer = false;
+    function update(){
+      var show = pastHero && !inOffer;
+      bar.classList.toggle('visible', show);
+      document.body.classList.toggle('sticky-active', show);
+    }
+    window.addEventListener('scroll', function(){
+      pastHero = window.scrollY > hero.offsetHeight * 0.8;
+      update();
+    }, { passive: true });
+    if ('IntersectionObserver' in window) {
+      var observer = new IntersectionObserver(function(entries){
+        entries.forEach(function(entry){ inOffer = entry.isIntersecting; });
+        update();
+      }, { threshold: 0.15 });
+      observer.observe(offer);
+    }
+  })();
 </script>
 
 </body>
